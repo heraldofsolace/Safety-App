@@ -43,7 +43,7 @@ class MainIntroActivity : AppIntro2() {
 		addSlide(AppIntro2Fragment.newInstance(sliderPage3))
 		addSlide(AppIntro2Fragment.newInstance(sliderPage4))
 		askForPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE,
-			Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_CONTACTS, Manifest.permission.CALL_PHONE, Manifest.permission.SEND_SMS, Manifest.permission.READ_SMS), 1)
+			Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_CONTACTS, Manifest.permission.CALL_PHONE, Manifest.permission.SEND_SMS, Manifest.permission.READ_SMS), 4)
 	}
 	
 	

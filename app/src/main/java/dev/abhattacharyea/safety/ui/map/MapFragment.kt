@@ -1,4 +1,4 @@
-package dev.abhattacharyea.safety.ui.dashboard
+package dev.abhattacharyea.safety.ui.map
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -21,7 +21,7 @@ import com.google.android.libraries.places.api.net.PlacesClient
 import dev.abhattacharyea.safety.R
 import org.jetbrains.anko.support.v4.toast
 
-class DashboardFragment : OnMapReadyCallback, Fragment() {
+class MapFragment : OnMapReadyCallback, Fragment() {
 
     lateinit var map: GoogleMap
     private lateinit var client: FusedLocationProviderClient

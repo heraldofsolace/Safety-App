@@ -12,14 +12,14 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/navigation_dashboard"
-        android:name="dev.abhattacharyea.safety.ui.dashboard.DashboardFragment"
-        android:label="@string/title_dashboard"
+        android:id="@+id/navigation_map"
+        android:name="dev.abhattacharyea.safety.ui.map.MapFragment"
+        android:label="@string/title_map"
         tools:layout="@layout/fragment_dashboard" />
 
     <fragment
-        android:id="@+id/navigation_notifications"
-        android:name="dev.abhattacharyea.safety.ui.notifications.NotificationsFragment"
-        android:label="@string/title_notifications"
+        android:id="@+id/navigation_settings"
+        android:name="dev.abhattacharyea.safety.ui.settings.SettingsFragment"
+        android:label="@string/title_settings"
         tools:layout="@layout/fragment_notifications" />
 </navigation>
