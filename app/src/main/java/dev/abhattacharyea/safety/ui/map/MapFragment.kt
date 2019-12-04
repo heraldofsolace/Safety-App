@@ -22,7 +22,11 @@ import dev.abhattacharyea.safety.R
 import org.jetbrains.anko.support.v4.toast
 
 class MapFragment : OnMapReadyCallback, Fragment() {
-
+	override fun onStop() {
+		client.removeLocationUpdates(locationCallback)
+		super.onStop()
+	}
+    
     lateinit var map: GoogleMap
     private lateinit var client: FusedLocationProviderClient
     var location: Location? = null
