@@ -3,4 +3,6 @@
     <string name="title_home">Home</string>
     <string name="title_map">Map</string>
     <string name="title_settings">Settings</string>
+    <string name="ic_kolkata">Kolkata</string>
+    <string name="i_am_snippet">I am snippet</string>
 </resources>
