@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <EditTextPreference
+        android:icon="@drawable/ic_preferences_message"
+        android:key="preference_emergency_message"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:summary="Your location data will always be sent"
+        android:text="I might be in danger"
+        android:title="Emergency message" />
+</PreferenceScreen>

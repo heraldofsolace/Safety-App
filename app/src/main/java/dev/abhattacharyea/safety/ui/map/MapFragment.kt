@@ -18,7 +18,9 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.libraries.places.api.net.PlacesClient
+import dev.abhattacharyea.safety.MapBottomSheet
 import dev.abhattacharyea.safety.MapsController
 import dev.abhattacharyea.safety.R
 import dev.abhattacharyea.safety.Utility
@@ -32,7 +34,8 @@ import retrofit2.Response
 
 //TODO: Need to improve map and add nearby places
 
-class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener, Fragment() {
+class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
+    GoogleMap.OnMarkerClickListener, Fragment() {
  
  
 	override fun onStop() {
@@ -93,6 +96,7 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener, 
     
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
+        map.setOnMarkerClickListener(this)
         mapsController = MapsController(context!!, map)
         if(location != null) {
             if(firstLocation)
@@ -211,6 +215,13 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener, 
         } else {
             mapsController.clearMarkers()
         }
+    }
+    
+    override fun onMarkerClick(p0: Marker?): Boolean {
+        val bottomSheet = MapBottomSheet()
+        bottomSheet.show(fragmentManager!!, "Bottom")
+        
+        return true
     }
     
 }

@@ -6,10 +6,12 @@ import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import androidx.preference.PreferenceManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import org.jetbrains.anko.startActivity
 import org.jetbrains.anko.startService
@@ -62,6 +64,13 @@ class MainActivity : AppCompatActivity() {
 //            val i = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
 //            startActivityForResult(i, 100)
 //        }
+		
+		val defaultPref = PreferenceManager.getDefaultSharedPreferences(this)
+		if(defaultPref.getString("preference_emergency_message", "") == "") {
+			defaultPref.edit {
+				putString("preference_emergency_message", "I might be in danger")
+			}
+		}
 		
 		startService<LockScreenService>()
 	}

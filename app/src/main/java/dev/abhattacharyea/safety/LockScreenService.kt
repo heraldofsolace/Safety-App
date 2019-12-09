@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
+import android.location.Location
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
@@ -16,23 +17,32 @@ import android.os.Vibrator
 import android.telephony.SmsManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.preference.PreferenceManager
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import dev.abhattacharyea.safety.ui.CallingDialog
 import net.steamcrafted.materialiconlib.MaterialDrawableBuilder
 import org.jetbrains.anko.db.classParser
 import org.jetbrains.anko.db.parseList
-import org.jetbrains.anko.db.rowParser
 import org.jetbrains.anko.db.select
 import org.jetbrains.anko.intentFor
 import org.jetbrains.anko.newTask
 
 class LockScreenService: Service() {
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var lastLocation: Location? = null
+    
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
 
     override fun onCreate() {
         super.onCreate()
-
+    
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        
+        
+        
         val screenFilter = IntentFilter()
         screenFilter.addAction(Intent.ACTION_SCREEN_OFF)
         screenFilter.addAction(Intent.ACTION_SCREEN_OFF)
@@ -100,16 +110,37 @@ class LockScreenService: Service() {
                         moveToFirst()
                         val number = getString(getColumnIndex("number"))
                         val smsManager = SmsManager.getDefault()
-                        smsManager.sendTextMessage(number, null, "Test", null, null)
-
-                        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            vibrator.vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE))
-                        } else {
-                            vibrator.vibrate(1000)
+                        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+                            lastLocation = location
+        
+                            var msg =
+                                PreferenceManager.getDefaultSharedPreferences(this@LockScreenService)
+                                    .getString(
+                                        "preference_emergency_message",
+                                        "I might be in danger"
+                                    )
+                            if(location == null) {
+                                msg += "\n My location could not be found"
+                            } else {
+                                msg += "\n My location is: ${location.latitude}, ${location.longitude}"
+                            }
+        
+                            smsManager.sendTextMessage(number, null, msg, null, null)
+        
+                            val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                vibrator.vibrate(
+                                    VibrationEffect.createOneShot(
+                                        1000,
+                                        VibrationEffect.DEFAULT_AMPLITUDE
+                                    )
+                                )
+                            } else {
+                                vibrator.vibrate(1000)
+                            }
                         }
-
-//                    toast("Sent SMS to mom")
+    
+    
                     }
                 }
 

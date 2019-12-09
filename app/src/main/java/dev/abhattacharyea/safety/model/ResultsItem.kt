@@ -22,5 +22,7 @@ data class ResultsItem(
 	@SerializedName("photos")
 	val photos: List<PhotosItem>?,
 	@SerializedName("place_id")
-	val placeId: String = ""
+	val placeId: String = "",
+	@SerializedName("opening_hours")
+	val openingHours: OpeningHours
 )

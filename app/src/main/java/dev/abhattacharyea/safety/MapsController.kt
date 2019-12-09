@@ -38,7 +38,7 @@ class MapsController(context: Context, googleMap: GoogleMap) {
 		mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mTimeSquare, 10f))
 	}
 	
-	fun setMarkersAndZoom(spotList: List<Spot>) {
+	fun setMarkersAndZoom(spotList: List<Spot>): ArrayList<Marker> {
 		val spotBitmap = BitmapDescriptorFactory.fromResource(R.drawable.ic_custom_marker)
 		
 		for(spot in spotList) {
@@ -50,10 +50,13 @@ class MapsController(context: Context, googleMap: GoogleMap) {
 			markerOptions.position(latLng).title(name).icon(spotBitmap)
 			
 			val marker = mGoogleMap.addMarker(markerOptions)
+			
 			mSpotMarkerList.add(marker)
+			
 		}
 		
 		mGoogleMap.animateCamera(MapsFactory.autoZoomLevel(mSpotMarkerList))
+		return mSpotMarkerList
 	}
 	
 	fun clearMarkers() {

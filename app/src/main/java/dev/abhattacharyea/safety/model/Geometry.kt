@@ -8,3 +8,4 @@ data class Geometry(
 	@SerializedName("location")
 	val location: Location?
 )
+
