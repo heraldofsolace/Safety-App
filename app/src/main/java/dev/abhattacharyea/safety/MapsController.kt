@@ -47,6 +47,7 @@ class MapsController(context: Context, googleMap: GoogleMap) {
 			val longitude = spot.lng
 			val latLng = LatLng(latitude!!, longitude!!)
 			val markerOptions = MarkerOptions()
+//			val bmp = BitmapFactory.decodeStream(URL(spot.icon).openConnection().getInputStream())
 			markerOptions.position(latLng).title(name).icon(spotBitmap)
 			
 			val marker = mGoogleMap.addMarker(markerOptions)

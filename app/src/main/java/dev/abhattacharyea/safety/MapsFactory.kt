@@ -64,9 +64,9 @@ object MapsFactory {
 		polylineOptions.width(DisplayUtility.px2dip(context, 72.toFloat()).toFloat())
 		polylineOptions.geodesic(true)
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-			polylineOptions.color(context.resources.getColor(android.R.color.black, context.theme))
+			polylineOptions.color(context.resources.getColor(R.color.colorPrimary, context.theme))
 		} else {
-			polylineOptions.color(context.resources.getColor(android.R.color.black))
+			polylineOptions.color(context.resources.getColor(R.color.colorPrimary))
 		}
 		return polylineOptions
 	}

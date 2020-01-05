@@ -53,6 +53,10 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
     lateinit var atmToggleButton: ToggleButton
     lateinit var hospitalToggleButton: ToggleButton
     
+    var markersList = ArrayList<Marker>()
+    var currentMarker: Marker? = null
+    lateinit var bottomSheet: MapBottomSheet
+    
     
     private fun searchForPlace(type: String, toggleButton: ToggleButton) {
         val position =
@@ -71,12 +75,13 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
                         val spot = Spot(
                             resultItem.name,
                             resultItem.geometry.location?.lat,
-                            resultItem.geometry.location?.lng
+                            resultItem.geometry.location?.lng,
+                            resultItem.icon
                         )
                         spotList.add(spot)
                     }
-                    
-                    mapsController.setMarkersAndZoom(spotList)
+    
+                    markersList = mapsController.setMarkersAndZoom(spotList)
                 } else {
                     toast(nearbySearch.status)
                     Log.d("LOCCCC", nearbySearch.toString())
@@ -97,6 +102,7 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
         map.setOnMarkerClickListener(this)
+    
         mapsController = MapsController(context!!, map)
         if(location != null) {
             if(firstLocation)
@@ -121,7 +127,9 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
         atmToggleButton.setOnCheckedChangeListener(this)
     
         hospitalToggleButton.setOnCheckedChangeListener(this)
-       // map.addMarker(MarkerOptions().position(kolkata).title("Location"))
+    
+    
+        // map.addMarker(MarkerOptions().position(kolkata).title("Location"))
 
         if (ContextCompat.checkSelfPermission(context!!, Manifest.permission.ACCESS_FINE_LOCATION)
             == PackageManager.PERMISSION_GRANTED
@@ -147,6 +155,7 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
         policeToggleButton = root.findViewById(R.id.policeToggleButton)
         atmToggleButton = root.findViewById(R.id.atmToggleButton)
         hospitalToggleButton = root.findViewById(R.id.hospitalToggleButton)
+
 //        Places.initialize(context!!, bundle.getString("com.google.android.geo.API_KEY")!!)
 //        placesClient = Places.createClient(context!!)
         return root
@@ -218,10 +227,25 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
     }
     
     override fun onMarkerClick(p0: Marker?): Boolean {
-        val bottomSheet = MapBottomSheet()
-        bottomSheet.show(fragmentManager!!, "Bottom")
+        p0?.let {
+            bottomSheet = MapBottomSheet(p0, location!!, mapsController)
         
+            currentMarker = p0
+        
+            bottomSheet.show(fragmentManager!!, "Bottom")
+        }
+
+//        bottomSheet.onDismiss(object :DialogInterface {
+//            override fun dismiss() {
+//                toast("Dismiss")
+//            }
+//
+//            override fun cancel() {
+//                toast("Cancel")
+//            }
+//        })
         return true
     }
+    
     
 }

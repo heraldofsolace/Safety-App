@@ -1,5 +1,6 @@
 package dev.abhattacharyea.safety.api
 
+import dev.abhattacharyea.safety.model.Directions
 import dev.abhattacharyea.safety.model.NearbySearch
 import retrofit2.Call
 import retrofit2.http.GET
@@ -13,4 +14,11 @@ interface GoogleMethods {
 		@Query("type") types: String,
 		@Query("key") key: String
 	): Call<NearbySearch>
+	
+	@GET("directions/json")
+	fun getDirections(
+		@Query("origin") origin: String,
+		@Query("destination") destination: String,
+		@Query("key") key: String
+	): Call<Directions>
 }

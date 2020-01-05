@@ -7,7 +7,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Color
 import android.location.Location
 import android.net.Uri
 import android.os.Build
@@ -21,7 +20,6 @@ import androidx.preference.PreferenceManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import dev.abhattacharyea.safety.ui.CallingDialog
-import net.steamcrafted.materialiconlib.MaterialDrawableBuilder
 import org.jetbrains.anko.db.classParser
 import org.jetbrains.anko.db.parseList
 import org.jetbrains.anko.db.select
@@ -61,26 +59,21 @@ class LockScreenService: Service() {
         val intent = Intent(this, CallingDialog::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
-
-        val intent_sms = Intent("dev.abhattacharyea.safety.sendsms")
-        val intent_call = Intent("dev.abhattacharyea.safety.call")
-        val intent_emergency = Intent("dev.abhattacharyea.safety.emergency")
-
-        val pendingIntent_call = PendingIntent.getBroadcast(this, 100, intent_call, 0)
-        val pendingIntent_sms = PendingIntent.getBroadcast(this, 1, intent_sms, 0)
-        val pendingIntent_emergency = PendingIntent.getBroadcast(this, 1, intent_emergency, 0)
-
-        val callDrawable = MaterialDrawableBuilder.with(this)
-            .setIcon(MaterialDrawableBuilder.IconValue.PHONE)
-            .setColor(Color.BLACK)
-            .setToActionbarSize()
-            .build()
+	
+	    val intentSms = Intent("dev.abhattacharyea.safety.sendsms")
+	    val intentCall = Intent("dev.abhattacharyea.safety.call")
+	    val intentEmergency = Intent("dev.abhattacharyea.safety.emergency")
+	
+	    val pendingintentCall = PendingIntent.getBroadcast(this, 100, intentCall, 0)
+	    val pendingintentSms = PendingIntent.getBroadcast(this, 1, intentSms, 0)
+	    val pendingintentEmergency = PendingIntent.getBroadcast(this, 1, intentEmergency, 0)
+        
 
         val builder = NotificationCompat.Builder(this, "lock_screen")
             .setSmallIcon(android.R.drawable.btn_plus)
-            .addAction(R.drawable.notification_call, "Call", pendingIntent_call)
-            .addAction(R.drawable.notification_sms, "Sms", pendingIntent_sms)
-            .addAction(R.drawable.notification_emergency, "Emergency", pendingIntent_emergency)
+	        .addAction(R.drawable.notification_call, "Call", pendingintentCall)
+	        .addAction(R.drawable.notification_sms, "Sms", pendingintentSms)
+	        .addAction(R.drawable.notification_emergency, "Emergency", pendingintentEmergency)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setStyle(androidx.media.app.NotificationCompat.MediaStyle().setShowActionsInCompactView(0,1,2))
             .setContentTitle("Safety")
