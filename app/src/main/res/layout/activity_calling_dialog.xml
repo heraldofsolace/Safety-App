@@ -5,7 +5,7 @@
 
     <fragment
         android:id="@+id/calling_dialog_fragment"
-        android:name="dev.abhattacharyea.safety.ui.home.HomeFragment"
+        android:name="dev.abhattacharyea.safety.ui.contact.ContactFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 </LinearLayout>

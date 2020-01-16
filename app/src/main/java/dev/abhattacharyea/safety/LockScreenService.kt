@@ -7,7 +7,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.Color
+import android.content.pm.PackageManager
+import android.location.Location
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
@@ -16,27 +17,30 @@ import android.os.Vibrator
 import android.telephony.SmsManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
+import androidx.preference.PreferenceManager
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import dev.abhattacharyea.safety.ui.CallingDialog
-import net.steamcrafted.materialiconlib.MaterialDrawableBuilder
 import org.jetbrains.anko.db.classParser
 import org.jetbrains.anko.db.parseList
-import org.jetbrains.anko.db.rowParser
 import org.jetbrains.anko.db.select
 import org.jetbrains.anko.intentFor
 import org.jetbrains.anko.newTask
 
 class LockScreenService: Service() {
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var lastLocation: Location? = null
+    
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
 
     override fun onCreate() {
         super.onCreate()
-
-        val screenFilter = IntentFilter()
-        screenFilter.addAction(Intent.ACTION_SCREEN_OFF)
-        screenFilter.addAction(Intent.ACTION_SCREEN_OFF)
-        registerReceiver(screenStateReceiver, screenFilter)
+    
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        
 
         val smsFilter = IntentFilter("dev.abhattacharyea.safety.sendsms")
         registerReceiver(smsreceiver, smsFilter)
@@ -51,26 +55,21 @@ class LockScreenService: Service() {
         val intent = Intent(this, CallingDialog::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
-
-        val intent_sms = Intent("dev.abhattacharyea.safety.sendsms")
-        val intent_call = Intent("dev.abhattacharyea.safety.call")
-        val intent_emergency = Intent("dev.abhattacharyea.safety.emergency")
-
-        val pendingIntent_call = PendingIntent.getBroadcast(this, 100, intent_call, 0)
-        val pendingIntent_sms = PendingIntent.getBroadcast(this, 1, intent_sms, 0)
-        val pendingIntent_emergency = PendingIntent.getBroadcast(this, 1, intent_emergency, 0)
-
-        val callDrawable = MaterialDrawableBuilder.with(this)
-            .setIcon(MaterialDrawableBuilder.IconValue.PHONE)
-            .setColor(Color.BLACK)
-            .setToActionbarSize()
-            .build()
+	
+	    val intentSms = Intent("dev.abhattacharyea.safety.sendsms")
+	    val intentCall = Intent("dev.abhattacharyea.safety.call")
+	    val intentEmergency = Intent("dev.abhattacharyea.safety.emergency")
+	
+	    val pendingintentCall = PendingIntent.getBroadcast(this, 100, intentCall, 0)
+	    val pendingintentSms = PendingIntent.getBroadcast(this, 1, intentSms, 0)
+	    val pendingintentEmergency = PendingIntent.getBroadcast(this, 1, intentEmergency, 0)
+        
 
         val builder = NotificationCompat.Builder(this, "lock_screen")
-            .setSmallIcon(android.R.drawable.btn_plus)
-            .addAction(R.drawable.notification_call, "Call", pendingIntent_call)
-            .addAction(R.drawable.notification_sms, "Sms", pendingIntent_sms)
-            .addAction(R.drawable.notification_emergency, "Emergency", pendingIntent_emergency)
+            .setSmallIcon(R.drawable.notification_emergency)
+	        .addAction(R.drawable.notification_call, "Call", pendingintentCall)
+	        .addAction(R.drawable.notification_sms, "Sms", pendingintentSms)
+	        .addAction(R.drawable.notification_emergency, "Emergency", pendingintentEmergency)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setStyle(androidx.media.app.NotificationCompat.MediaStyle().setShowActionsInCompactView(0,1,2))
             .setContentTitle("Safety")
@@ -82,7 +81,6 @@ class LockScreenService: Service() {
 
 
     override fun onDestroy() {
-        unregisterReceiver(screenStateReceiver)
         unregisterReceiver(smsreceiver)
         unregisterReceiver(callReceiver)
         unregisterReceiver(emergencyReceiver)
@@ -100,16 +98,37 @@ class LockScreenService: Service() {
                         moveToFirst()
                         val number = getString(getColumnIndex("number"))
                         val smsManager = SmsManager.getDefault()
-                        smsManager.sendTextMessage(number, null, "Test", null, null)
-
-                        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            vibrator.vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE))
-                        } else {
-                            vibrator.vibrate(1000)
+                        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+                            lastLocation = location
+        
+                            var msg =
+                                PreferenceManager.getDefaultSharedPreferences(this@LockScreenService)
+                                    .getString(
+                                        "preference_emergency_message",
+                                        "I might be in danger"
+                                    )
+                            msg += if(location == null) {
+                                "\n My location could not be found"
+                            } else {
+                                "\n My location is: ${location.latitude}, ${location.longitude}"
+                            }
+                            Log.i(TAG, "Sending SMS to $number")
+                            smsManager.sendTextMessage(number, null, msg, null, null)
+        
+                            val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                vibrator.vibrate(
+                                    VibrationEffect.createOneShot(
+                                        1000,
+                                        VibrationEffect.DEFAULT_AMPLITUDE
+                                    )
+                                )
+                            } else {
+                                vibrator.vibrate(1000)
+                            }
                         }
-
-//                    toast("Sent SMS to mom")
+    
+    
                     }
                 }
 
@@ -135,8 +154,15 @@ class LockScreenService: Service() {
                         val i = Intent(Intent.ACTION_CALL)
                         i.data = Uri.parse("tel:$number")
                         i.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        Log.d("SERVICE", "CAll")
-                        startActivity(i)
+                        Log.i(TAG, "Calling $number")
+                        if(ContextCompat.checkSelfPermission(
+                                this@LockScreenService,
+                                android.Manifest.permission.CALL_PHONE
+                            )
+                            == PackageManager.PERMISSION_GRANTED
+                        )
+                            startActivity(i)
+                        else Log.e(TAG, "Permission not granted")
                     }
                 }
 
@@ -158,14 +184,36 @@ class LockScreenService: Service() {
                     contacts.forEach {
                         val number = it.number
                         val smsManager = SmsManager.getDefault()
-                        smsManager.sendTextMessage(number, null, "Test", null, null)
-    
-                        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            vibrator.vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE))
-                        } else {
-                            vibrator.vibrate(1000)
+                        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                            lastLocation = location
+                            var msg =
+                                PreferenceManager.getDefaultSharedPreferences(this@LockScreenService)
+                                    .getString(
+                                        "preference_emergency_message",
+                                        "I might be in danger"
+                                    )
+                            msg += if(location == null) {
+                                "\n My location could not be found"
+                            } else {
+                                "\n My location is: ${location.latitude}, ${location.longitude}"
+                            }
+                            Log.i(TAG, "Sending emergency message to $number")
+        
+                            smsManager.sendTextMessage(number, null, msg, null, null)
+        
+                            val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                vibrator.vibrate(
+                                    VibrationEffect.createOneShot(
+                                        1000,
+                                        VibrationEffect.DEFAULT_AMPLITUDE
+                                    )
+                                )
+                            } else {
+                                vibrator.vibrate(1000)
+                            }
                         }
+                        
                     }
                 }
             }
@@ -173,14 +221,7 @@ class LockScreenService: Service() {
     }
     
     
-    private val screenStateReceiver = object :BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            Log.d("SERVICE", "Hi")
-            intent?.let {
-//                if(it.action == Intent.ACTION_SCREEN_ON) {
-//
-//                }
-            }
-        }
+    companion object {
+        val TAG = LockScreenService::class.java.simpleName
     }
 }
