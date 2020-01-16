@@ -1,6 +1,10 @@
 package dev.abhattacharyea.safety.ui.map
 
 import android.Manifest
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
@@ -12,6 +16,7 @@ import android.widget.CompoundButton
 import android.widget.ToggleButton
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -19,13 +24,12 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
-import com.google.android.libraries.places.api.net.PlacesClient
-import dev.abhattacharyea.safety.MapBottomSheet
-import dev.abhattacharyea.safety.MapsController
+import dev.abhattacharyea.safety.*
 import dev.abhattacharyea.safety.R
-import dev.abhattacharyea.safety.Utility
 import dev.abhattacharyea.safety.api.RetrofitClient
+import dev.abhattacharyea.safety.model.Directions
 import dev.abhattacharyea.safety.model.NearbySearch
+import dev.abhattacharyea.safety.model.Route
 import dev.abhattacharyea.safety.model.Spot
 import org.jetbrains.anko.support.v4.toast
 import retrofit2.Call
@@ -48,11 +52,11 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
     private lateinit var client: FusedLocationProviderClient
     var location: Location? = null
     private var firstLocation = true
-    lateinit var placesClient: PlacesClient
     lateinit var policeToggleButton: ToggleButton
     lateinit var atmToggleButton: ToggleButton
     lateinit var hospitalToggleButton: ToggleButton
     
+    private lateinit var spotList: ArrayList<Spot>
     var markersList = ArrayList<Marker>()
     var currentMarker: Marker? = null
     lateinit var bottomSheet: MapBottomSheet
@@ -61,30 +65,32 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
     private fun searchForPlace(type: String, toggleButton: ToggleButton) {
         val position =
             map.cameraPosition.target.latitude.toString() + "," + map.cameraPosition.target.longitude.toString()
-        Log.d("LOCCCC", position)
+        Log.d(TAG, position)
         val placesCall = RetrofitClient.googleMethods()
-            .getNearbySearch(position, "1000", type, "AIzaSyAGl2-QS5tQjmvi2NvzOLZUpq3Yuon506A")
+            .getNearbySearch(position, "1000", type, Constants.API_KEY)
         placesCall.enqueue(object : Callback<NearbySearch> {
             override fun onResponse(call: Call<NearbySearch>, response: Response<NearbySearch>) {
                 val nearbySearch = response.body()!!
                 
                 if(nearbySearch.status == "OK") {
-                    val spotList = ArrayList<Spot>()
+                    spotList = ArrayList()
                     
                     for(resultItem in nearbySearch.results!!) {
                         val spot = Spot(
                             resultItem.name,
                             resultItem.geometry.location?.lat,
                             resultItem.geometry.location?.lng,
-                            resultItem.icon
+                            resultItem.icon,
+                            resultItem.photos?.get(0)?.photoReference
                         )
+                        Log.d("PHOTOS", resultItem.photos.toString())
                         spotList.add(spot)
                     }
     
                     markersList = mapsController.setMarkersAndZoom(spotList)
                 } else {
                     toast(nearbySearch.status)
-                    Log.d("LOCCCC", nearbySearch.toString())
+                    Log.d(TAG, nearbySearch.toString())
                     toggleButton.isChecked = false
                 }
                 
@@ -93,7 +99,7 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
             
             override fun onFailure(call: Call<NearbySearch>, t: Throwable) {
                 toast(t.toString())
-                Log.d("LOCCCC", t.toString())
+                Log.d(TAG, t.toString())
                 toggleButton.isChecked = false
             }
         })
@@ -111,15 +117,10 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
                     LatLng(
                         location!!.latitude,
                         location!!.longitude
-                    ), 5F
+                    ), 1F
                 )
             )
-            else {
-            }
-//                map.moveCamera(CameraUpdateFactory.newLatLng(LatLng(
-//                    location!!.latitude,
-//                    location!!.longitude
-//                )))
+    
         }
     
         policeToggleButton.setOnCheckedChangeListener(this)
@@ -128,7 +129,9 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
     
         hospitalToggleButton.setOnCheckedChangeListener(this)
     
-    
+        LocalBroadcastManager.getInstance(context!!).registerReceiver(
+            directionsReceiver, IntentFilter("dev.abhattacharyea.safety.showDirections")
+        )
         // map.addMarker(MarkerOptions().position(kolkata).title("Location"))
 
         if (ContextCompat.checkSelfPermission(context!!, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -187,8 +190,8 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
     }
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult?) {
-            Log.d("LOC", locationResult!!.lastLocation.latitude.toString())
-            Log.d("LOC", "Location")
+            Log.d(TAG, locationResult!!.lastLocation.latitude.toString())
+            Log.d(TAG, "Location")
 
             location = locationResult.lastLocation
             if(location != null) {
@@ -198,7 +201,7 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
                             LatLng(
                                 location!!.latitude,
                                 location!!.longitude
-                            ), 100F
+                            ), 20F
                         )
                     )
 //                else
@@ -213,6 +216,8 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
     }
     
     override fun onCheckedChanged(buttonView: CompoundButton?, isChecked: Boolean) {
+        mapsController.clearMarkers()
+        mapsController.clearMarkersAndRoute()
         if(isChecked) {
             val type = when(buttonView?.id) {
                 R.id.policeToggleButton -> Utility.TYPE_POLICE
@@ -223,16 +228,22 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
             searchForPlace(type, buttonView as ToggleButton)
         } else {
             mapsController.clearMarkers()
+            mapsController.clearMarkersAndRoute()
         }
     }
     
     override fun onMarkerClick(p0: Marker?): Boolean {
         p0?.let {
-            bottomSheet = MapBottomSheet(p0, location!!, mapsController)
+            val spot = spotList.find {
+                it.lat == p0.position.latitude && it.lng == p0.position.longitude
+            }
+            bottomSheet = MapBottomSheet(p0, location!!, mapsController, spot?.photoReference)
         
             currentMarker = p0
-        
+    
+    
             bottomSheet.show(fragmentManager!!, "Bottom")
+    
         }
 
 //        bottomSheet.onDismiss(object :DialogInterface {
@@ -248,4 +259,50 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
     }
     
     
+    private val directionsReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            hospitalToggleButton.isChecked = false
+            policeToggleButton.isChecked = false
+            atmToggleButton.isChecked = false
+            val directionsCall =
+                RetrofitClient.googleMethods().getDirections(
+                    "${location?.latitude},${location?.longitude}",
+                    "${currentMarker?.position?.latitude},${currentMarker?.position?.longitude}",
+                    Constants.API_KEY
+                )
+            directionsCall.enqueue(object : Callback<Directions> {
+                override fun onResponse(call: Call<Directions>, response: Response<Directions>) {
+                    val directions = response.body()!!
+                    
+                    if(directions.status == "OK") {
+                        val legs = directions.routes[0].legs[0]
+                        val route = Route(
+                            "Current location",
+                            currentMarker?.title.toString(),
+                            legs.startLocation.lat,
+                            legs.startLocation.lng,
+                            legs.endLocation.lat,
+                            legs.endLocation.lng,
+                            directions.routes[0].overviewPolyline.points
+                        )
+                        mapsController.clearMarkers()
+                        mapsController.setMarkersAndRoute(route)
+                    } else {
+                        toast(directions.status)
+                        
+                    }
+                    
+                }
+                
+                override fun onFailure(call: Call<Directions>, t: Throwable) {
+                    toast(t.toString())
+                    
+                }
+            })
+        }
+    }
+    
+    companion object {
+        val TAG = MapFragment::class.java.simpleName
+    }
 }

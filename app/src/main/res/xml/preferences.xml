@@ -9,4 +9,12 @@
         android:summary="Your location data will always be sent"
         android:text="I might be in danger"
         android:title="Emergency message" />
+    <CheckBoxPreference
+        android:key="data_collection_accepted"
+        android:title="Agree to the data collection disclosure" />
+    <Preference
+        android:key="about"
+        android:title="About">
+
+    </Preference>
 </PreferenceScreen>

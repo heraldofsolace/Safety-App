@@ -5,4 +5,8 @@
     <string name="title_settings">Settings</string>
     <string name="ic_kolkata">Kolkata</string>
     <string name="i_am_snippet">I am snippet</string>
+    <string name="aboutLibraries_description_showIcon">true</string>
+    <string name="aboutLibraries_description_showVersion">true</string>
+    <string name="aboutLibraries_description_text">Stay safe, wherever you are</string>
+    <string name="title_about">About</string>
 </resources>

@@ -2,9 +2,9 @@ package dev.abhattacharyea.safety.ui
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import dev.abhattacharyea.safety.database
 import dev.abhattacharyea.safety.Contact
 import dev.abhattacharyea.safety.ContactsDbOpenHelper
+import dev.abhattacharyea.safety.database
 import org.jetbrains.anko.alert
 import org.jetbrains.anko.appcompat.v7.Appcompat
 import org.jetbrains.anko.db.classParser
@@ -34,7 +34,7 @@ class CallingDialog : AppCompatActivity() {
                     title = "Choose a contact to ${if (call) "call" else "message"}"
                     items(names) { dialogInterface, pos ->
                         if (call) makeCall(contactsList[pos].number)
-                        else sendSMS(contactsList[pos].number, "Test")
+                        else sendSMS(contactsList[pos].number, "")
                         finish()
                     }
                 }.build().apply {
