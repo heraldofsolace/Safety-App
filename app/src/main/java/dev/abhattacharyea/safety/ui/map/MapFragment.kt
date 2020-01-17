@@ -32,6 +32,7 @@ import dev.abhattacharyea.safety.model.NearbySearch
 import dev.abhattacharyea.safety.model.Route
 import dev.abhattacharyea.safety.model.Spot
 import org.jetbrains.anko.support.v4.toast
+import org.jetbrains.anko.toast
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -288,7 +289,7 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
                         mapsController.clearMarkers()
                         mapsController.setMarkersAndRoute(route)
                     } else {
-                        toast(directions.status)
+                        context?.toast(directions.status)
                         
                     }
                     
