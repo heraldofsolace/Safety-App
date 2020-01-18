@@ -24,8 +24,11 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
-import dev.abhattacharyea.safety.*
+import com.google.firebase.auth.FirebaseAuth
+import dev.abhattacharyea.safety.MapBottomSheet
+import dev.abhattacharyea.safety.MapsController
 import dev.abhattacharyea.safety.R
+import dev.abhattacharyea.safety.Utility
 import dev.abhattacharyea.safety.api.RetrofitClient
 import dev.abhattacharyea.safety.model.Directions
 import dev.abhattacharyea.safety.model.NearbySearch
@@ -61,14 +64,15 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
     var markersList = ArrayList<Marker>()
     var currentMarker: Marker? = null
     lateinit var bottomSheet: MapBottomSheet
-    
+    private var userId: String? = null
     
     private fun searchForPlace(type: String, toggleButton: ToggleButton) {
+    
         val position =
             map.cameraPosition.target.latitude.toString() + "," + map.cameraPosition.target.longitude.toString()
         Log.d(TAG, position)
         val placesCall = RetrofitClient.googleMethods()
-            .getNearbySearch(position, "1000", type, Constants.API_KEY)
+            .getNearbySearch(position, "1000", type, "Bearer $userId"/* , Constants.API_KEY */)
         placesCall.enqueue(object : Callback<NearbySearch> {
             override fun onResponse(call: Call<NearbySearch>, response: Response<NearbySearch>) {
                 val nearbySearch = response.body()!!
@@ -91,7 +95,7 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
                     markersList = mapsController.setMarkersAndZoom(spotList)
                 } else {
                     toast(nearbySearch.status)
-                    Log.d(TAG, nearbySearch.toString())
+                    Log.d(TAG, nearbySearch.errorMessage.toString())
                     toggleButton.isChecked = false
                 }
                 
@@ -159,7 +163,16 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
         policeToggleButton = root.findViewById(R.id.policeToggleButton)
         atmToggleButton = root.findViewById(R.id.atmToggleButton)
         hospitalToggleButton = root.findViewById(R.id.hospitalToggleButton)
-
+    
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.getIdToken(true)?.addOnCompleteListener {
+            if(it.isSuccessful) {
+                userId = it.result?.token
+            } else {
+                it.exception?.printStackTrace()
+                toast("Something went wrong while logging you in")
+            }
+        }
 //        Places.initialize(context!!, bundle.getString("com.google.android.geo.API_KEY")!!)
 //        placesClient = Places.createClient(context!!)
         return root
@@ -269,7 +282,8 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
                 RetrofitClient.googleMethods().getDirections(
                     "${location?.latitude},${location?.longitude}",
                     "${currentMarker?.position?.latitude},${currentMarker?.position?.longitude}",
-                    Constants.API_KEY
+                    "Bearer $userId"
+                    /* Constants.API_KEY */
                 )
             directionsCall.enqueue(object : Callback<Directions> {
                 override fun onResponse(call: Call<Directions>, response: Response<Directions>) {

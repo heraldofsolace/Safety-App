@@ -5,7 +5,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-	private const val GOOGLE_BASE_URL = "https://maps.googleapis.com/maps/api/"
+	private const val GOOGLE_BASE_URL = "https://us-central1-safety-12.cloudfunctions.net/"
 	
 	fun googleMethods(): GoogleMethods {
 		val retrofit = Retrofit.Builder()
