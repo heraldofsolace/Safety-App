@@ -29,7 +29,7 @@ object MapsFactory {
 			}
 			val bounds = builder.build()
 			
-			val padding = 200 // offset from edges of the map in pixels
+			val padding = 20 // offset from edges of the map in pixels
 			
 			return CameraUpdateFactory.newLatLngBounds(bounds, padding)
 		}

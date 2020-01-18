@@ -22,4 +22,9 @@
         android:name="dev.abhattacharyea.safety.ui.settings.SettingsFragment"
         android:label="@string/title_settings"
         tools:layout="@layout/fragment_notifications" />
+    <fragment
+        android:id="@+id/navigation_donation"
+        android:name="dev.abhattacharyea.safety.ui.donation.DonationFragment"
+        android:label="@string/title_donate"
+        tools:layout="@layout/fragment_donation" />
 </navigation>

@@ -69,9 +69,6 @@ class MainActivity : AppCompatActivity() {
 		}
 
 
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-//            setShowWhenLocked(true)
-//        }
 		setContentView(R.layout.activity_main)
 		val navView: BottomNavigationView = findViewById(R.id.nav_view)
 		
@@ -80,7 +77,10 @@ class MainActivity : AppCompatActivity() {
 		// menu should be considered as top level destinations.
 		val appBarConfiguration = AppBarConfiguration(
 			setOf(
-				R.id.navigation_contact, R.id.navigation_map, R.id.navigation_settings
+				R.id.navigation_contact,
+				R.id.navigation_map,
+				R.id.navigation_settings,
+				R.id.navigation_donation
 			)
 		)
 		setupActionBarWithNavController(navController, appBarConfiguration)
@@ -110,10 +110,6 @@ class MainActivity : AppCompatActivity() {
 			)
 		}
 		
-//        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-//            val i = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
-//            startActivityForResult(i, 100)
-//        }
 		
 		val defaultPref = PreferenceManager.getDefaultSharedPreferences(this)
 		if(defaultPref.getString("preference_emergency_message", "") == "") {
