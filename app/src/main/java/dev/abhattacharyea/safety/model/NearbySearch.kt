@@ -8,5 +8,7 @@ data class NearbySearch(
 	@SerializedName("results")
 	val results: List<ResultsItem>?,
 	@SerializedName("status")
-	val status: String = ""
+	val status: String = "",
+	@SerializedName("error_message")
+	val errorMessage: String? = ""
 )
