@@ -16,7 +16,7 @@
     <Preference
         android:key="logout"
         android:title="Log out"
-        android:icon="@drawable/ic_logout"></Preference>
+        android:icon="@drawable/ic_logout" />
     <Preference
         android:key="about"
         android:title="About"
