@@ -75,29 +75,35 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
             .getNearbySearch(position, "1000", type, "Bearer $userId"/* , Constants.API_KEY */)
         placesCall.enqueue(object : Callback<NearbySearch> {
             override fun onResponse(call: Call<NearbySearch>, response: Response<NearbySearch>) {
-                val nearbySearch = response.body()!!
-                
-                if(nearbySearch.status == "OK") {
-                    spotList = ArrayList()
-                    
-                    for(resultItem in nearbySearch.results!!) {
-                        val spot = Spot(
-                            resultItem.name,
-                            resultItem.geometry.location?.lat,
-                            resultItem.geometry.location?.lng,
-                            resultItem.icon,
-                            resultItem.photos?.get(0)?.photoReference
-                        )
-                        Log.d("PHOTOS", resultItem.photos.toString())
-                        spotList.add(spot)
-                    }
+                val nearbySearch = response.body()
     
-                    markersList = mapsController.setMarkersAndZoom(spotList)
+                if(nearbySearch != null) {
+        
+                    if(nearbySearch.status == "OK") {
+                        spotList = ArrayList()
+            
+                        for(resultItem in nearbySearch.results!!) {
+                            val spot = Spot(
+                                resultItem.name,
+                                resultItem.geometry.location?.lat,
+                                resultItem.geometry.location?.lng,
+                                resultItem.icon,
+                                resultItem.photos?.get(0)?.photoReference
+                            )
+                            Log.d("PHOTOS", resultItem.photos.toString())
+                            spotList.add(spot)
+                        }
+            
+                        markersList = mapsController.setMarkersAndZoom(spotList)
+                    } else {
+                        toast(nearbySearch.status)
+                        Log.d(TAG, nearbySearch.errorMessage.toString())
+                        toggleButton.isChecked = false
+                    }
                 } else {
-                    toast(nearbySearch.status)
-                    Log.d(TAG, nearbySearch.errorMessage.toString())
-                    toggleButton.isChecked = false
+                    toast("Something went wrong. Please try again")
                 }
+                
                 
                 
             }
