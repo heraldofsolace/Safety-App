@@ -126,6 +126,8 @@ class MainActivity : AppCompatActivity() {
 		mAdView.loadAd(adRequest)
 		
 		startService<LockScreenService>()
+		
+		
 	}
 	
 }
