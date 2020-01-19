@@ -53,7 +53,7 @@ class DonationFragment : Fragment(), PurchasesUpdatedListener {
 							billingClient.querySkuDetailsAsync(params) { billingResult_, skuDetailsList ->
 								if(billingResult.responseCode == BillingClient.BillingResponseCode.OK && skuDetailsList.isNotEmpty()) {
 									for(skuDetails in skuDetailsList) {
-										val button = Button(context)
+										val button = Button(it)
 										button.layoutParams = LinearLayout.LayoutParams(
 											ViewGroup.LayoutParams.WRAP_CONTENT,
 											ViewGroup.LayoutParams.WRAP_CONTENT
