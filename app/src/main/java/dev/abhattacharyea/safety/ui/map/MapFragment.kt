@@ -59,6 +59,8 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
     lateinit var policeToggleButton: ToggleButton
     lateinit var atmToggleButton: ToggleButton
     lateinit var hospitalToggleButton: ToggleButton
+    lateinit var busStationToggleButton: ToggleButton
+    lateinit var trainStationToggleButton: ToggleButton
     
     private lateinit var spotList: ArrayList<Spot>
     var markersList = ArrayList<Marker>()
@@ -68,8 +70,8 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
     
     private fun searchForPlace(type: String, toggleButton: ToggleButton) {
     
-        val position =
-            map.cameraPosition.target.latitude.toString() + "," + map.cameraPosition.target.longitude.toString()
+        val position = "${location?.latitude},${location?.longitude}"
+        //map.cameraPosition.target.latitude.toString() + "," + map.cameraPosition.target.longitude.toString()
         Log.d(TAG, position)
         val placesCall = RetrofitClient.googleMethods()
             .getNearbySearch(position, "1000", type, "Bearer $userId"/* , Constants.API_KEY */)
@@ -80,22 +82,28 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
                 if(nearbySearch != null) {
         
                     if(nearbySearch.status == "OK") {
-                        spotList = ArrayList()
-            
-                        for(resultItem in nearbySearch.results!!) {
-                            val spot = Spot(
-                                resultItem.name,
-                                resultItem.geometry.location?.lat,
-                                resultItem.geometry.location?.lng,
-                                resultItem.icon,
-                                resultItem.photos?.get(0)?.photoReference,
-                                resultItem.openingHours?.openNow
-                            )
-                            Log.d("PHOTOS", resultItem.photos.toString())
-                            spotList.add(spot)
+                        if(nearbySearch.results!!.isEmpty()) {
+                            toast("No results found")
+                            toggleButton.isChecked = false
+                        } else {
+                            spotList = ArrayList()
+        
+                            for(resultItem in nearbySearch.results) {
+                                val spot = Spot(
+                                    resultItem.name,
+                                    resultItem.geometry.location?.lat,
+                                    resultItem.geometry.location?.lng,
+                                    resultItem.icon,
+                                    resultItem.photos?.get(0)?.photoReference,
+                                    resultItem.openingHours?.openNow
+                                )
+//                                Log.d("PHOTOS", resultItem.photos.toString())
+                                spotList.add(spot)
+                            }
+        
+                            markersList = mapsController.setMarkersAndZoom(spotList)
                         }
-            
-                        markersList = mapsController.setMarkersAndZoom(spotList)
+    
                     } else {
                         toast(nearbySearch.status)
                         Log.d(TAG, nearbySearch.errorMessage.toString())
@@ -140,6 +148,8 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
         atmToggleButton.setOnCheckedChangeListener(this)
     
         hospitalToggleButton.setOnCheckedChangeListener(this)
+        busStationToggleButton.setOnCheckedChangeListener(this)
+        trainStationToggleButton.setOnCheckedChangeListener(this)
     
         LocalBroadcastManager.getInstance(context!!).registerReceiver(
             directionsReceiver, IntentFilter("dev.abhattacharyea.safety.showDirections")
@@ -170,6 +180,8 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
         policeToggleButton = root.findViewById(R.id.policeToggleButton)
         atmToggleButton = root.findViewById(R.id.atmToggleButton)
         hospitalToggleButton = root.findViewById(R.id.hospitalToggleButton)
+        busStationToggleButton = root.findViewById(R.id.busStationToggleButton)
+        trainStationToggleButton = root.findViewById(R.id.trainStationToggleButton)
     
         val user = FirebaseAuth.getInstance().currentUser
         user?.getIdToken(true)?.addOnCompleteListener {
@@ -244,6 +256,8 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
                 R.id.policeToggleButton -> Utility.TYPE_POLICE
                 R.id.atmToggleButton -> Utility.TYPE_ATM
                 R.id.hospitalToggleButton -> Utility.TYPE_HOSPITAL
+                R.id.busStationToggleButton -> Utility.TYPE_BUS_STATION
+                R.id.trainStationToggleButton -> Utility.TYPE_TRAIN_STATION
                 else -> Utility.TYPE_POLICE
             }
             searchForPlace(type, buttonView as ToggleButton)
