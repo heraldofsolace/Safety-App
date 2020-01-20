@@ -88,7 +88,8 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
                                 resultItem.geometry.location?.lat,
                                 resultItem.geometry.location?.lng,
                                 resultItem.icon,
-                                resultItem.photos?.get(0)?.photoReference
+                                resultItem.photos?.get(0)?.photoReference,
+                                resultItem.openingHours?.openNow
                             )
                             Log.d("PHOTOS", resultItem.photos.toString())
                             spotList.add(spot)
@@ -257,7 +258,7 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
             val spot = spotList.find {
                 it.lat == p0.position.latitude && it.lng == p0.position.longitude
             }
-            bottomSheet = MapBottomSheet(p0, location!!, mapsController, spot?.photoReference)
+            bottomSheet = MapBottomSheet(p0, userId, spot?.photoReference, spot?.openNow)
         
             currentMarker = p0
     

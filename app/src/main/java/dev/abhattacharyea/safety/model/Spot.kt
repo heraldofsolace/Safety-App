@@ -5,5 +5,6 @@ data class Spot(
 	val lat: Double?,
 	val lng: Double?,
 	val icon: String?,
-	val photoReference: String?
+	val photoReference: String?,
+	val openNow: Boolean?
 )
