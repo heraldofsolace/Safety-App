@@ -11,10 +11,16 @@
         android:title="Emergency message" />
     <CheckBoxPreference
         android:key="data_collection_accepted"
-        android:title="Agree to the data collection disclosure" />
+        android:title="Agree to the data collection disclosure"
+        android:icon="@drawable/ic_data" />
+    <Preference
+        android:key="logout"
+        android:title="Log out"
+        android:icon="@drawable/ic_logout" />
     <Preference
         android:key="about"
-        android:title="About">
+        android:title="About"
+        android:icon="@drawable/ic_about">
 
     </Preference>
 </PreferenceScreen>

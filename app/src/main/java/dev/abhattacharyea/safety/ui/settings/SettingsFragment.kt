@@ -3,10 +3,13 @@ package dev.abhattacharyea.safety.ui.settings
 import android.os.Bundle
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import com.google.firebase.auth.FirebaseAuth
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.LibsBuilder
+import dev.abhattacharyea.safety.MainActivity
 import dev.abhattacharyea.safety.R
 import org.jetbrains.anko.alert
+import org.jetbrains.anko.support.v4.startActivity
 
 class SettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -14,6 +17,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     
         val aboutPreference = findPreference<Preference>("about")
         val dataPreference = findPreference<Preference>("data_collection_accepted")
+        val logoutPreference = findPreference<Preference>("logout")
         aboutPreference?.setOnPreferenceClickListener {
             context?.let {
                 LibsBuilder()
@@ -39,6 +43,24 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 
                 }
             }
+            true
+        }
+    
+        logoutPreference?.setOnPreferenceClickListener {
+            context?.let {
+                it.alert("Are you sure you want to log out?", "Log Out") {
+                    positiveButton("Yes") {
+                        FirebaseAuth.getInstance().signOut()
+                        startActivity<MainActivity>()
+                        activity?.finish()
+                    }
+                
+                    negativeButton("No") { }
+                
+                    show()
+                }
+            }
+        
             true
         }
     }

@@ -24,5 +24,5 @@ data class ResultsItem(
 	@SerializedName("place_id")
 	val placeId: String = "",
 	@SerializedName("opening_hours")
-	val openingHours: OpeningHours
+	val openingHours: OpeningHours?
 )
