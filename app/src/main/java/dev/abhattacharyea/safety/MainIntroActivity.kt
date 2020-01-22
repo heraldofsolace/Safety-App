@@ -39,6 +39,13 @@ class MainIntroActivity : AppIntro2() {
 			bgColor = R.color.colorPrimary
 		}
 		
+		val sliderPage8 = SliderPage().apply {
+			title = "Permissions needed"
+			description = "Audio - to capture audio and send it to your contacts"
+			imageDrawable = R.mipmap.ic_launcher
+			bgColor = R.color.colorPrimary
+		}
+		
 		val sliderPage5 = SliderPage().apply {
 			title = "Features"
 			description =
@@ -72,6 +79,7 @@ class MainIntroActivity : AppIntro2() {
 		addSlide(AppIntro2Fragment.newInstance(sliderPage2))
 		addSlide(AppIntro2Fragment.newInstance(sliderPage3))
 		addSlide(AppIntro2Fragment.newInstance(sliderPage4))
+		addSlide(AppIntro2Fragment.newInstance(sliderPage8))
 //		addSlide(AppIntro2Fragment.newInstance(sliderPage5))
 //		addSlide(AppIntro2Fragment.newInstance(sliderPage6))
 //		addSlide(AppIntro2Fragment.newInstance(sliderPage7))
@@ -84,6 +92,11 @@ class MainIntroActivity : AppIntro2() {
 				Manifest.permission.SEND_SMS,
 				Manifest.permission.READ_SMS
 			), 4
+		)
+		askForPermissions(
+			arrayOf(
+				Manifest.permission.RECORD_AUDIO
+			), 5
 		)
 
 

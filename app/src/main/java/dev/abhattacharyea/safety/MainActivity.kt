@@ -1,13 +1,16 @@
 package dev.abhattacharyea.safety
 
+import android.Manifest
 import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.edit
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -29,7 +32,14 @@ import org.jetbrains.anko.toast
 class MainActivity : AppCompatActivity() {
 	
 	val RC_SIGN_IN = 100
-	
+	val permissionsList = arrayListOf(
+		Manifest.permission.ACCESS_FINE_LOCATION to 1001,
+		Manifest.permission.READ_CONTACTS to 1002,
+		Manifest.permission.CALL_PHONE to 1003,
+		Manifest.permission.SEND_SMS to 1004,
+		Manifest.permission.READ_SMS to 1005,
+		Manifest.permission.RECORD_AUDIO to 1006
+	)
 	override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 		super.onActivityResult(requestCode, resultCode, data)
 		
@@ -49,6 +59,16 @@ class MainActivity : AppCompatActivity() {
 				// response.getError().getErrorCode() and handle the error.
 				// ...
 			}
+		}
+	}
+	
+	override fun onRequestPermissionsResult(
+		requestCode: Int,
+		permissions: Array<out String>,
+		grantResults: IntArray
+	) {
+		if(grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_DENIED) {
+			toast("Permission denied. This might cause unexpected behaviour")
 		}
 	}
 	
@@ -110,6 +130,16 @@ class MainActivity : AppCompatActivity() {
 			)
 		}
 		
+		ActivityCompat.requestPermissions(
+			this,
+			permissionsList.map { it.first }.toTypedArray(),
+			1000
+		)
+//		permissionsList.forEach {
+//			if(ContextCompat.checkSelfPermission(this, it.first) != PackageManager.PERMISSION_GRANTED) {
+//				ActivityCompat.requestPermissions(this, arrayOf(it.first), it.second)
+//			}
+//		}
 		
 		val defaultPref = PreferenceManager.getDefaultSharedPreferences(this)
 		if(defaultPref.getString("preference_emergency_message", "") == "") {
