@@ -24,6 +24,9 @@ import androidx.preference.PreferenceManager
 import com.github.piasy.rxandroidaudio.AudioRecorder
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import dev.abhattacharyea.safety.ui.CallingDialog
 import org.jetbrains.anko.db.classParser
 import org.jetbrains.anko.db.parseList
@@ -31,13 +34,17 @@ import org.jetbrains.anko.db.select
 import org.jetbrains.anko.intentFor
 import org.jetbrains.anko.newTask
 import java.io.File
+import java.util.*
 
 class LockScreenService: Service() {
 	private lateinit var fusedLocationClient: FusedLocationProviderClient
 	private var lastLocation: Location? = null
 	private var audioRecorder = AudioRecorder.getInstance()
 	private var isRecording = false
+	private var audioFileName: String? = null
 	private lateinit var audioNotificationBuilder: NotificationCompat.Builder
+	private lateinit var db: FirebaseFirestore
+	private lateinit var storage: FirebaseStorage
 	override fun onBind(intent: Intent?): IBinder? {
 		return null
 	}
@@ -46,7 +53,8 @@ class LockScreenService: Service() {
 		super.onCreate()
 		
 		fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-		
+		db = FirebaseFirestore.getInstance()
+		storage = FirebaseStorage.getInstance()
 		
 		val smsFilter = IntentFilter("dev.abhattacharyea.safety.sendsms")
 		registerReceiver(smsreceiver, smsFilter)
@@ -131,17 +139,10 @@ class LockScreenService: Service() {
 
 
 //            val audioRecorder = AudioRecorder.getInstance()
-			val audioFile = File("${filesDir}/Audio-${System.nanoTime()}.m4a")
-			audioRecorder.prepareRecord(
-				MediaRecorder.AudioSource.MIC,
-				MediaRecorder.OutputFormat.MPEG_4,
-				MediaRecorder.AudioEncoder.AAC,
-				192000,
-				192000,
-				audioFile
-			)
+			
 			
 			if(isRecording) {
+				val audioFile = File("$filesDir/$audioFileName")
 				audioRecorder.stopRecord()
 				audioNotificationBuilder
 					.setContentText("Use the button to record the Audio and send a link to your contacts")
@@ -161,9 +162,68 @@ class LockScreenService: Service() {
 				} else {
 					vibrator.vibrate(1000)
 				}
-				
+				audioFileName?.let {
+					val uid = FirebaseAuth.getInstance().currentUser?.uid
+					db.collection("audio_files")
+						.add(
+							hashMapOf(
+								"uid" to uid,
+								"filename" to audioFileName,
+								"upload_time" to Calendar.getInstance().timeInMillis
+							)
+						).addOnSuccessListener { documentReference ->
+							val fileId = documentReference.id
+							Log.d(TAG, "Uploading file to $fileId")
+							val storageRef =
+								storage.reference.child("audio/$uid/$fileId-$audioFileName")
+							val filePath = Uri.fromFile(audioFile)
+							val uploadTask = storageRef.putFile(filePath)
+							val urlTask = uploadTask.continueWithTask { task ->
+								if(!task.isSuccessful) {
+									task.exception?.let {
+										throw it
+									}
+								}
+								
+								storageRef.downloadUrl
+							}.addOnCompleteListener { task ->
+								if(task.isSuccessful) {
+									val downloadUri = task.result
+									Log.d(TAG, "File uploaded at: $downloadUri")
+									val intentEmergency =
+										Intent("dev.abhattacharyea.safety.emergency").apply {
+											putExtra(
+												"extra_message",
+												"\n I have sent an audio record which can be downloaded " +
+														"at: ${downloadUri}. Keep this link safe as anyone with access to this link can " +
+														"download. This link will expire after 24 hours"
+											)
+										}
+									context?.let {
+										Log.d(TAG, "Sending message with audio")
+										it.sendBroadcast(intentEmergency)
+										audioFile.delete()
+									}
+								} else {
+									task.exception?.printStackTrace()
+								}
+							}
+						}.addOnFailureListener { exception ->
+							exception.printStackTrace()
+						}
+				}
 				isRecording = false
 			} else {
+				audioFileName = "Audio-${System.nanoTime()}.m4a"
+				val audioFile = File("$filesDir/$audioFileName")
+				audioRecorder.prepareRecord(
+					MediaRecorder.AudioSource.MIC,
+					MediaRecorder.OutputFormat.MPEG_4,
+					MediaRecorder.AudioEncoder.AAC,
+					192000,
+					192000,
+					audioFile
+				)
 				audioRecorder.startRecord()
 				audioNotificationBuilder
 					.setContentText("Recording Audio")
@@ -284,13 +344,17 @@ class LockScreenService: Service() {
 			database.use {
 				select("Contacts").orderBy("priority").exec {
 					
+					val extraMessage = intent?.getStringExtra("extra_message")
+					
 					val parser = classParser<Contact>()
 					val contacts = parseList(parser)
 					contacts.forEach {
 						val number = it.number
 						val smsManager = SmsManager.getDefault()
+						
 						fusedLocationClient.lastLocation.addOnSuccessListener { location ->
 							lastLocation = location
+							
 							var msg =
 								PreferenceManager.getDefaultSharedPreferences(this@LockScreenService)
 									.getString(
@@ -302,9 +366,15 @@ class LockScreenService: Service() {
 							} else {
 								"\n My location is: ${location.latitude}, ${location.longitude}"
 							}
+							
+							extraMessage?.let { extra ->
+								msg += extra
+							}
+							
+							val msgList = smsManager.divideMessage(msg)
 							Log.i(TAG, "Sending emergency message to $number")
 							
-							smsManager.sendTextMessage(number, null, msg, null, null)
+							smsManager.sendMultipartTextMessage(number, null, msgList, null, null)
 							
 							val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
 							if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

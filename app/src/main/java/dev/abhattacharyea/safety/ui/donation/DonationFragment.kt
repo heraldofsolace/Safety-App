@@ -15,7 +15,7 @@ import org.jetbrains.anko.toast
 
 class DonationFragment : Fragment(), PurchasesUpdatedListener {
 	private lateinit var billingClient: BillingClient
-	private val skuList = listOf("donate_10", "donate_50", "donate_100")
+	private val skuList = listOf("donate_10", "donate_50", "donate_100", "donate_1000")
 	private lateinit var skuRecyclerView: RecyclerView
 	private lateinit var skuAdapter: DonationAdapter
 	override fun onCreateView(
@@ -55,6 +55,9 @@ class DonationFragment : Fragment(), PurchasesUpdatedListener {
 							
 							billingClient.querySkuDetailsAsync(params) { billingResult_, skuDetailsList ->
 								if(billingResult.responseCode == BillingClient.BillingResponseCode.OK && skuDetailsList.isNotEmpty()) {
+									skuDetailsList.sortBy { sku ->
+										sku.sku.substringAfter('_').toDouble()
+									}
 									skuAdapter = DonationAdapter(it, skuDetailsList, billingClient)
 									skuRecyclerView.adapter = skuAdapter
 									

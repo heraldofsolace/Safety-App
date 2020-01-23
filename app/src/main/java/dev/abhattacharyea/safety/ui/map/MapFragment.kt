@@ -40,7 +40,6 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-//TODO: Need to improve map and add nearby places
 
 class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
     GoogleMap.OnMarkerClickListener, Fragment() {

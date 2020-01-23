@@ -1,8 +1,10 @@
 package dev.abhattacharyea.safety.ui.settings
 
 import android.os.Bundle
+import androidx.core.content.edit
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceManager
 import com.google.firebase.auth.FirebaseAuth
 import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.LibsBuilder
@@ -10,6 +12,7 @@ import dev.abhattacharyea.safety.MainActivity
 import dev.abhattacharyea.safety.R
 import org.jetbrains.anko.alert
 import org.jetbrains.anko.support.v4.startActivity
+import org.jetbrains.anko.support.v4.toast
 
 class SettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -18,6 +21,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val aboutPreference = findPreference<Preference>("about")
         val dataPreference = findPreference<Preference>("data_collection_accepted")
         val logoutPreference = findPreference<Preference>("logout")
+        val tutorialPreference = findPreference<Preference>("tutorial")
         aboutPreference?.setOnPreferenceClickListener {
             context?.let {
                 LibsBuilder()
@@ -60,7 +64,15 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     show()
                 }
             }
-        
+    
+            true
+        }
+    
+        tutorialPreference?.setOnPreferenceClickListener {
+            PreferenceManager.getDefaultSharedPreferences(context).edit {
+                putBoolean("tutorial_showed", false)
+                toast("Tutorials will be shown again")
+            }
             true
         }
     }
