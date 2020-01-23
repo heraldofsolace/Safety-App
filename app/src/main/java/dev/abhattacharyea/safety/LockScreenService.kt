@@ -36,7 +36,7 @@ import org.jetbrains.anko.newTask
 import java.io.File
 import java.util.*
 
-class LockScreenService: Service() {
+class LockScreenService : Service() {
 	private lateinit var fusedLocationClient: FusedLocationProviderClient
 	private var lastLocation: Location? = null
 	private var audioRecorder = AudioRecorder.getInstance()

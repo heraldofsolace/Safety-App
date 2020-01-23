@@ -40,6 +40,7 @@ class MainActivity : AppCompatActivity() {
 		Manifest.permission.READ_SMS to 1005,
 		Manifest.permission.RECORD_AUDIO to 1006
 	)
+	
 	override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 		super.onActivityResult(requestCode, resultCode, data)
 		
@@ -87,8 +88,8 @@ class MainActivity : AppCompatActivity() {
 				getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 			notificationManager.createNotificationChannel(channel)
 		}
-
-
+		
+		
 		setContentView(R.layout.activity_main)
 		val navView: BottomNavigationView = findViewById(R.id.nav_view)
 		

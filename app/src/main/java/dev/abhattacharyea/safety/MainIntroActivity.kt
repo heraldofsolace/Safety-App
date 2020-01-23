@@ -28,7 +28,8 @@ class MainIntroActivity : AppIntro2() {
 		}
 		val sliderPage3 = SliderPage().apply {
 			title = "Permissions needed"
-			description = "Contacts - for making sure your alert gets delivered to the ones you trust"
+			description =
+				"Contacts - for making sure your alert gets delivered to the ones you trust"
 			imageDrawable = R.mipmap.ic_launcher
 			bgColor = R.color.colorAccent
 		}
@@ -107,7 +108,8 @@ class MainIntroActivity : AppIntro2() {
 	
 	override fun onDonePressed(currentFragment: Fragment?) {
 		super.onDonePressed(currentFragment)
-		getSharedPreferences("prefs", Context.MODE_PRIVATE).edit().putBoolean("firstrun", false).apply()
+		getSharedPreferences("prefs", Context.MODE_PRIVATE).edit().putBoolean("firstrun", false)
+			.apply()
 		startActivity<MainActivity>()
 		finish()
 	}

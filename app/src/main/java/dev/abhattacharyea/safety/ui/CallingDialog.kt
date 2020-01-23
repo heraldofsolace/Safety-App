@@ -14,42 +14,42 @@ import org.jetbrains.anko.makeCall
 import org.jetbrains.anko.sendSMS
 
 class CallingDialog : AppCompatActivity() {
-
-    private val contactsList = ArrayList<Contact>()
-    override fun onCreate(savedInstanceState: Bundle?) {
-
-        super.onCreate(savedInstanceState)
-        val call = intent.getBooleanExtra("call", true)
-        database.use {
-            select(ContactsDbOpenHelper.contactsTableName).exec {
-                val parser = classParser<Contact>()
-                contactsList.clear()
-                contactsList.addAll(parseList(parser))
-                val names = ArrayList<String>()
-                contactsList.forEach {
-                    names.add(it.name)
-                }
-
-                alert(Appcompat) {
-                    title = "Choose a contact to ${if (call) "call" else "message"}"
-                    items(names) { dialogInterface, pos ->
-                        if (call) makeCall(contactsList[pos].number)
-                        else sendSMS(contactsList[pos].number, "")
-                        finish()
-                    }
-                }.build().apply {
-                    setCancelable(true)
-                    setOnCancelListener {
-                        finish()
-                    }
-                    setOnDismissListener {
-                        finish()
-                    }
-                }.show()
+	
+	private val contactsList = ArrayList<Contact>()
+	override fun onCreate(savedInstanceState: Bundle?) {
+		
+		super.onCreate(savedInstanceState)
+		val call = intent.getBooleanExtra("call", true)
+		database.use {
+			select(ContactsDbOpenHelper.contactsTableName).exec {
+				val parser = classParser<Contact>()
+				contactsList.clear()
+				contactsList.addAll(parseList(parser))
+				val names = ArrayList<String>()
+				contactsList.forEach {
+					names.add(it.name)
+				}
+				
+				alert(Appcompat) {
+					title = "Choose a contact to ${if(call) "call" else "message"}"
+					items(names) { dialogInterface, pos ->
+						if(call) makeCall(contactsList[pos].number)
+						else sendSMS(contactsList[pos].number, "")
+						finish()
+					}
+				}.build().apply {
+					setCancelable(true)
+					setOnCancelListener {
+						finish()
+					}
+					setOnDismissListener {
+						finish()
+					}
+				}.show()
 
 //
-            }
-        }
-
-    }
+			}
+		}
+		
+	}
 }
