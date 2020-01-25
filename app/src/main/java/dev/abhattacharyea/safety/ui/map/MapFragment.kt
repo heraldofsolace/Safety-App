@@ -310,25 +310,27 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
 				)
 			directionsCall.enqueue(object : Callback<Directions> {
 				override fun onResponse(call: Call<Directions>, response: Response<Directions>) {
-					val directions = response.body()!!
 					
-					if(directions.status == "OK") {
-						val legs = directions.routes[0].legs[0]
-						val route = Route(
-							"Current location",
-							currentMarker?.title.toString(),
-							legs.startLocation.lat,
-							legs.startLocation.lng,
-							legs.endLocation.lat,
-							legs.endLocation.lng,
-							directions.routes[0].overviewPolyline.points
-						)
-						mapsController.clearMarkers()
-						mapsController.setMarkersAndRoute(route)
-					} else {
-						context?.toast(directions.status)
-						
+					response.body().let { directions ->
+						if(directions?.status == "OK") {
+							val legs = directions.routes[0].legs[0]
+							val route = Route(
+								"Current location",
+								currentMarker?.title.toString(),
+								legs.startLocation.lat,
+								legs.startLocation.lng,
+								legs.endLocation.lat,
+								legs.endLocation.lng,
+								directions.routes[0].overviewPolyline.points
+							)
+							mapsController.clearMarkers()
+							mapsController.setMarkersAndRoute(route)
+						} else {
+							context?.toast(directions?.status.toString())
+							
+						}
 					}
+					
 					
 				}
 				
