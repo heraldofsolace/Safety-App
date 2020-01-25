@@ -178,34 +178,23 @@ class LockScreenService : Service() {
 								storage.reference.child("audio/$uid/$fileId-$audioFileName")
 							val filePath = Uri.fromFile(audioFile)
 							val uploadTask = storageRef.putFile(filePath)
-							val urlTask = uploadTask.continueWithTask { task ->
-								if(!task.isSuccessful) {
-									task.exception?.let {
-										throw it
+							
+							uploadTask.addOnSuccessListener {
+								val downloadUri =
+									"https://us-central1-safety-12.cloudfunctions.net/downloadFile?ref_id=$fileId"
+								val intentEmergency =
+									Intent("dev.abhattacharyea.safety.emergency").apply {
+										putExtra(
+											"extra_message",
+											"\n I have sent an audio record which can be downloaded " +
+													"at: ${downloadUri}. Keep this link safe as anyone with access to this link can " +
+													"download. This link will expire after 24 hours"
+										)
 									}
-								}
-								
-								storageRef.downloadUrl
-							}.addOnCompleteListener { task ->
-								if(task.isSuccessful) {
-									val downloadUri = task.result
-									Log.d(TAG, "File uploaded at: $downloadUri")
-									val intentEmergency =
-										Intent("dev.abhattacharyea.safety.emergency").apply {
-											putExtra(
-												"extra_message",
-												"\n I have sent an audio record which can be downloaded " +
-														"at: ${downloadUri}. Keep this link safe as anyone with access to this link can " +
-														"download. This link will expire after 24 hours"
-											)
-										}
-									context?.let {
-										Log.d(TAG, "Sending message with audio")
-										it.sendBroadcast(intentEmergency)
-										audioFile.delete()
-									}
-								} else {
-									task.exception?.printStackTrace()
+								context?.let {
+									Log.d(TAG, "Sending message with audio")
+									it.sendBroadcast(intentEmergency)
+									audioFile.delete()
 								}
 							}
 						}.addOnFailureListener { exception ->
