@@ -73,7 +73,7 @@ class MapBottomSheet(
 				}
 			
 		}
-
+		
 		return v
 	}
 	

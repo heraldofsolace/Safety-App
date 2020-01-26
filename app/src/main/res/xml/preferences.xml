@@ -1,26 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <EditTextPreference
-        android:icon="@drawable/ic_preferences_message"
-        android:key="preference_emergency_message"
-        android:selectAllOnFocus="true"
-        android:singleLine="true"
-        android:summary="Your location data will always be sent"
-        android:text="I might be in danger"
-        android:title="Emergency message" />
-    <CheckBoxPreference
-        android:key="data_collection_accepted"
-        android:title="Agree to the data collection disclosure"
-        android:icon="@drawable/ic_data" />
-    <Preference
-        android:key="logout"
-        android:title="Log out"
-        android:icon="@drawable/ic_logout" />
-    <Preference
-        android:key="about"
-        android:title="About"
-        android:icon="@drawable/ic_about">
+    <PreferenceCategory android:title="Application">
+        <SwitchPreference
+            android:defaultValue="true"
+            android:icon="@drawable/ic_contact_settings"
+            android:key="enable_contact_notification"
+            android:title="Show contact notification" />
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="enable_audio_notification"
+            android:title="Show audio capture notification"
+            android:icon="@drawable/ic_audio_settings" />
+        <EditTextPreference
+            android:icon="@drawable/ic_preferences_message"
+            android:key="preference_emergency_message"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:summary="Your location data will always be sent"
+            android:text="I might be in danger"
+            android:title="Emergency message" />
+        <CheckBoxPreference
+            android:icon="@drawable/ic_data"
+            android:key="data_collection_accepted"
+            android:title="Agree to the data collection disclosure" />
+    </PreferenceCategory>
 
-    </Preference>
+    <PreferenceCategory android:title="Account">
+        <!--        <Preference-->
+        <!--            android:icon="@drawable/ic_logout"-->
+        <!--            android:key="profile"-->
+        <!--            android:title="Profile"-->
+        <!--            >-->
+        <!--            <intent android:targetPackage="dev.abhattacharyea.safety"-->
+        <!--                android:targetClass="dev.abhattacharyea.safety.ui.ProfileActivity">-->
+
+        <!--            </intent>-->
+        <!--        </Preference>-->
+
+        <Preference
+            android:icon="@drawable/ic_logout"
+            android:key="logout"
+            android:title="Log out" />
+    </PreferenceCategory>
+
+
+    <PreferenceCategory android:title="Information">
+        <Preference
+            android:icon="@drawable/ic_help"
+            android:key="tutorial"
+            android:summary="Tutorials will be shown again when you perform an action"
+            android:title="Reset tutorials" />
+        <Preference
+            android:icon="@drawable/ic_changelog"
+            android:key="changelog"
+            android:summary="See what\'s new in this release"
+            android:title="What\'s new" />
+        <Preference
+            android:icon="@drawable/ic_about"
+            android:key="about"
+            android:title="About" />
+
+    </PreferenceCategory>
+
 </PreferenceScreen>

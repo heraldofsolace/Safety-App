@@ -1,19 +1,25 @@
 package dev.abhattacharyea.safety
 
+import android.Manifest
 import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.edit
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.preference.PreferenceManager
+import ch.derlin.changelog.Changelog
+import ch.derlin.changelog.Changelog.getAppVersion
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.android.gms.ads.AdRequest
@@ -29,10 +35,17 @@ import org.jetbrains.anko.toast
 class MainActivity : AppCompatActivity() {
 	
 	val RC_SIGN_IN = 100
+	val permissionsList = arrayListOf(
+		Manifest.permission.ACCESS_FINE_LOCATION to 1001,
+		Manifest.permission.READ_CONTACTS to 1002,
+		Manifest.permission.CALL_PHONE to 1003,
+		Manifest.permission.SEND_SMS to 1004,
+		Manifest.permission.READ_SMS to 1005,
+		Manifest.permission.RECORD_AUDIO to 1006
+	)
 	
 	override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-		super.onActivityResult(requestCode, resultCode, data)
-		
+		Log.d(TAG, requestCode.toString())
 		if(requestCode == RC_SIGN_IN) {
 			val response = IdpResponse.fromResultIntent(data)
 			
@@ -49,6 +62,18 @@ class MainActivity : AppCompatActivity() {
 				// response.getError().getErrorCode() and handle the error.
 				// ...
 			}
+		}
+		super.onActivityResult(requestCode, resultCode, data)
+		
+	}
+	
+	override fun onRequestPermissionsResult(
+		requestCode: Int,
+		permissions: Array<out String>,
+		grantResults: IntArray
+	) {
+		if(grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_DENIED) {
+			toast("Permission denied. This might cause unexpected behaviour")
 		}
 	}
 	
@@ -67,8 +92,8 @@ class MainActivity : AppCompatActivity() {
 				getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 			notificationManager.createNotificationChannel(channel)
 		}
-
-
+		
+		
 		setContentView(R.layout.activity_main)
 		val navView: BottomNavigationView = findViewById(R.id.nav_view)
 		
@@ -110,6 +135,16 @@ class MainActivity : AppCompatActivity() {
 			)
 		}
 		
+		ActivityCompat.requestPermissions(
+			this,
+			permissionsList.map { it.first }.toTypedArray(),
+			1000
+		)
+//		permissionsList.forEach {
+//			if(ContextCompat.checkSelfPermission(this, it.first) != PackageManager.PERMISSION_GRANTED) {
+//				ActivityCompat.requestPermissions(this, arrayOf(it.first), it.second)
+//			}
+//		}
 		
 		val defaultPref = PreferenceManager.getDefaultSharedPreferences(this)
 		if(defaultPref.getString("preference_emergency_message", "") == "") {
@@ -125,9 +160,30 @@ class MainActivity : AppCompatActivity() {
 		val adRequest: AdRequest = AdRequest.Builder().build()
 		mAdView.loadAd(adRequest)
 		
-		startService<LockScreenService>()
+		val version = getAppVersion()
+		if(!defaultPref.getBoolean("tutorial_showed_for_version_${version.first}", false)) {
+			val dialog = Changelog.createDialog(this, versionCode = version.first)
+			dialog.setOnDismissListener {
+				toast("You can view the changelog again from the settings")
+			}
+			
+			dialog.show()
+			defaultPref.edit {
+				putBoolean("tutorial_showed_for_version_${version.first}", true)
+			}
+		}
+		
+		
+		val showMainNotification = defaultPref.getBoolean("show_contact_notification", true)
+		val showAudioNotification = defaultPref.getBoolean("show_audio_notification", true)
+		
+		if(showMainNotification || showAudioNotification)
+			startService<LockScreenService>()
 		
 		
 	}
 	
+	companion object {
+		val TAG = MainActivity::class.java.simpleName
+	}
 }

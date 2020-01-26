@@ -28,13 +28,21 @@ class MainIntroActivity : AppIntro2() {
 		}
 		val sliderPage3 = SliderPage().apply {
 			title = "Permissions needed"
-			description = "Contacts - for making sure your alert gets delivered to the ones you trust"
+			description =
+				"Contacts - for making sure your alert gets delivered to the ones you trust"
 			imageDrawable = R.mipmap.ic_launcher
 			bgColor = R.color.colorAccent
 		}
 		val sliderPage4 = SliderPage().apply {
 			title = "Permissions needed"
 			description = "Phone & SMS - for sending out alert when you need it"
+			imageDrawable = R.mipmap.ic_launcher
+			bgColor = R.color.colorPrimary
+		}
+		
+		val sliderPage8 = SliderPage().apply {
+			title = "Permissions needed"
+			description = "Audio - to capture audio and send it to your contacts"
 			imageDrawable = R.mipmap.ic_launcher
 			bgColor = R.color.colorPrimary
 		}
@@ -72,6 +80,7 @@ class MainIntroActivity : AppIntro2() {
 		addSlide(AppIntro2Fragment.newInstance(sliderPage2))
 		addSlide(AppIntro2Fragment.newInstance(sliderPage3))
 		addSlide(AppIntro2Fragment.newInstance(sliderPage4))
+		addSlide(AppIntro2Fragment.newInstance(sliderPage8))
 //		addSlide(AppIntro2Fragment.newInstance(sliderPage5))
 //		addSlide(AppIntro2Fragment.newInstance(sliderPage6))
 //		addSlide(AppIntro2Fragment.newInstance(sliderPage7))
@@ -85,6 +94,11 @@ class MainIntroActivity : AppIntro2() {
 				Manifest.permission.READ_SMS
 			), 4
 		)
+		askForPermissions(
+			arrayOf(
+				Manifest.permission.RECORD_AUDIO
+			), 5
+		)
 
 
 //		askForPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -94,7 +108,8 @@ class MainIntroActivity : AppIntro2() {
 	
 	override fun onDonePressed(currentFragment: Fragment?) {
 		super.onDonePressed(currentFragment)
-		getSharedPreferences("prefs", Context.MODE_PRIVATE).edit().putBoolean("firstrun", false).apply()
+		getSharedPreferences("prefs", Context.MODE_PRIVATE).edit().putBoolean("firstrun", false)
+			.apply()
 		startActivity<MainActivity>()
 		finish()
 	}

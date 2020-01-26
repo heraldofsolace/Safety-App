@@ -5,31 +5,34 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.LinearLayout
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.android.billingclient.api.*
+import dev.abhattacharyea.safety.DonationAdapter
 import dev.abhattacharyea.safety.R
 import org.jetbrains.anko.toast
 
 class DonationFragment : Fragment(), PurchasesUpdatedListener {
 	private lateinit var billingClient: BillingClient
-	private val skuList = listOf("donate_10", "donate_50", "donate_100")
-	private lateinit var layout: LinearLayout
+	private val skuList = listOf("donate_10", "donate_50", "donate_100", "donate_1000")
+	private lateinit var skuRecyclerView: RecyclerView
+	private lateinit var skuAdapter: DonationAdapter
 	override fun onCreateView(
 		inflater: LayoutInflater,
 		container: ViewGroup?,
 		savedInstanceState: Bundle?
 	): View? {
 		val v = inflater.inflate(R.layout.fragment_donation, container, false)
-		layout = v.findViewById(R.id.donation_layout)
+		skuRecyclerView = v.findViewById(R.id.donation_list)
+		skuRecyclerView.layoutManager = LinearLayoutManager(context)
 		setUpBillingClient()
 		
 		return v
 	}
 	
 	private fun setUpBillingClient() {
-		context?.let {
+		activity?.let {
 			billingClient = BillingClient.newBuilder(it)
 				.enablePendingPurchases()
 				.setListener(this)
@@ -52,27 +55,12 @@ class DonationFragment : Fragment(), PurchasesUpdatedListener {
 							
 							billingClient.querySkuDetailsAsync(params) { billingResult_, skuDetailsList ->
 								if(billingResult.responseCode == BillingClient.BillingResponseCode.OK && skuDetailsList.isNotEmpty()) {
-									for(skuDetails in skuDetailsList) {
-										val button = Button(it)
-										button.layoutParams = LinearLayout.LayoutParams(
-											ViewGroup.LayoutParams.WRAP_CONTENT,
-											ViewGroup.LayoutParams.WRAP_CONTENT
-										)
-										button.text = "${skuDetails.title} (${skuDetails.price})"
-										button.setOnClickListener {
-											val billingFlowParams = BillingFlowParams
-												.newBuilder()
-												.setSkuDetails(skuDetails)
-												.build()
-											billingClient.launchBillingFlow(
-												activity,
-												billingFlowParams
-											)
-											
-										}
-										
-										layout.addView(button)
+									skuDetailsList.sortBy { sku ->
+										sku.sku.substringAfter('_').toDouble()
 									}
+									skuAdapter = DonationAdapter(it, skuDetailsList, billingClient)
+									skuRecyclerView.adapter = skuAdapter
+									
 								}
 							}
 						} else {
