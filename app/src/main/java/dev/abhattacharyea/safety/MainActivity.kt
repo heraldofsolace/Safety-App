@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.edit
@@ -17,6 +18,8 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.preference.PreferenceManager
+import ch.derlin.changelog.Changelog
+import ch.derlin.changelog.Changelog.getAppVersion
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.android.gms.ads.AdRequest
@@ -42,8 +45,7 @@ class MainActivity : AppCompatActivity() {
 	)
 	
 	override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-		super.onActivityResult(requestCode, resultCode, data)
-		
+		Log.d(TAG, requestCode.toString())
 		if(requestCode == RC_SIGN_IN) {
 			val response = IdpResponse.fromResultIntent(data)
 			
@@ -61,6 +63,8 @@ class MainActivity : AppCompatActivity() {
 				// ...
 			}
 		}
+		super.onActivityResult(requestCode, resultCode, data)
+		
 	}
 	
 	override fun onRequestPermissionsResult(
@@ -156,9 +160,30 @@ class MainActivity : AppCompatActivity() {
 		val adRequest: AdRequest = AdRequest.Builder().build()
 		mAdView.loadAd(adRequest)
 		
-		startService<LockScreenService>()
+		val version = getAppVersion()
+		if(!defaultPref.getBoolean("tutorial_showed_for_version_${version.first}", false)) {
+			val dialog = Changelog.createDialog(this, versionCode = version.first)
+			dialog.setOnDismissListener {
+				toast("You can view the changelog again from the settings")
+			}
+			
+			dialog.show()
+			defaultPref.edit {
+				putBoolean("tutorial_showed_for_version_${version.first}", true)
+			}
+		}
+		
+		
+		val showMainNotification = defaultPref.getBoolean("show_contact_notification", true)
+		val showAudioNotification = defaultPref.getBoolean("show_audio_notification", true)
+		
+		if(showMainNotification || showAudioNotification)
+			startService<LockScreenService>()
 		
 		
 	}
 	
+	companion object {
+		val TAG = MainActivity::class.java.simpleName
+	}
 }

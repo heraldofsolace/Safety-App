@@ -12,4 +12,5 @@
     <string name="title_donate">Donate</string>
     <string name="call_for_donation">Developing an app is a time consuming job. It takes time, and money
     to maintain and update the app. Donating a small amount will motivate me to continuing providing quality</string>
+    <string name="changelog_title">What\'s new</string>
 </resources>

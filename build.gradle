@@ -32,6 +32,9 @@ allprojects {
         maven {
             url "http://dl.bintray.com/piasy/maven"
         }
+        maven {
+            url  "https://dl.bintray.com/derlin/maven"
+        }
     }
 }
 

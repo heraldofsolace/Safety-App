@@ -32,6 +32,9 @@ class ContactFragment : Fragment() {
 	private lateinit var adapter: ContactListAdapter
 	private lateinit var noContactsText: TextView
 	lateinit var pref: SharedPreferences
+	
+	val ADD_CONTACT_REQUEST = 200
+	
 	private fun refreshList() {
 		context?.database?.use {
 			select(ContactsDbOpenHelper.contactsTableName).exec {
@@ -48,23 +51,34 @@ class ContactFragment : Fragment() {
 	}
 	
 	override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-		super.onActivityResult(requestCode, resultCode, data)
-		if(requestCode == 100) {
+		if(requestCode == ADD_CONTACT_REQUEST) {
 			if(resultCode == RESULT_OK) {
 				val results = MultiContactPicker.obtainResult(data)
-				
-				context?.database?.use {
-					execSQL("INSERT OR IGNORE INTO Contacts(name, number, priority) VALUES(\"${results[0].displayName}\", \"${results[0].phoneNumbers[0].number}\", (SELECT IFNULL(max(priority), 0) + 1 FROM Contacts))")
-					//val id = insert("Contacts", "name" to results[0].displayName, "number" to results[0].phoneNumbers[0].number)
-					toast("Done")
-					refreshList()
+				Log.d(TAG, results.size.toString())
+				if(results.isEmpty()) {
+					toast("No contacts selected")
+				} else {
+					if(results[0].phoneNumbers.isEmpty()) {
+						toast("The selected contact does not have a number")
+					} else {
+						context?.database?.use {
+							execSQL("INSERT OR IGNORE INTO Contacts(name, number, priority) VALUES(\"${results[0].displayName}\", \"${results[0].phoneNumbers[0].number}\", (SELECT IFNULL(max(priority), 0) + 1 FROM Contacts))")
+							//val id = insert("Contacts", "name" to results[0].displayName, "number" to results[0].phoneNumbers[0].number)
+							toast("Done")
+							refreshList()
+							
+						}
+						
+						Log.d(TAG, results[0].displayName)
+					}
 					
 				}
 				
-				Log.d(TAG, results[0].displayName)
 				
 			}
 		}
+		super.onActivityResult(requestCode, resultCode, data)
+		
 	}
 	
 	override fun onCreateView(
@@ -124,7 +138,7 @@ class ContactFragment : Fragment() {
 			} else
 				MultiContactPicker.Builder(this)
 					.setChoiceMode(MultiContactPicker.CHOICE_MODE_SINGLE)
-					.showPickerForResult(100)
+					.showPickerForResult(ADD_CONTACT_REQUEST)
 		}
 		
 		if(!pref.getBoolean("tutorial_showed", false)) {

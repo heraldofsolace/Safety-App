@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<changelog>
+    <release
+        version="2.0"
+        versioncode="10">
+        <change>Now you can capture an audio and send a link to your contacts!!</change>
+        <change>You can view the tutorials again</change>
+        <change>You can now disable any or both of the notifications</change>
+        <change>Redesigned donation page</change>
+        <change>This changelog ;-)</change>
+    </release>
+</changelog>

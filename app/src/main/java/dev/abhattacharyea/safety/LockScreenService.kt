@@ -31,6 +31,7 @@ import dev.abhattacharyea.safety.ui.CallingDialog
 import org.jetbrains.anko.db.classParser
 import org.jetbrains.anko.db.parseList
 import org.jetbrains.anko.db.select
+import org.jetbrains.anko.defaultSharedPreferences
 import org.jetbrains.anko.intentFor
 import org.jetbrains.anko.newTask
 import java.io.File
@@ -114,11 +115,23 @@ class LockScreenService : Service() {
 			.setPriority(NotificationCompat.PRIORITY_MAX)
 			.setOngoing(true)
 		
-		
-		startForeground(100, builder.build())
-		with(NotificationManagerCompat.from(this)) {
-			notify(200, audioNotificationBuilder.build())
+		val defaultPref = defaultSharedPreferences
+		val showMainNotification = defaultPref.getBoolean("enable_contact_notification", true)
+		val showAudioNotification = defaultPref.getBoolean("enable_audio_notification", true)
+//		toast(showMainNotification.toString())
+		if(showMainNotification) {
+			startForeground(100, builder.build())
+			if(showAudioNotification) {
+				with(NotificationManagerCompat.from(this)) {
+					notify(200, audioNotificationBuilder.build())
+				}
+			}
+		} else {
+			if(showAudioNotification)
+				startForeground(100, audioNotificationBuilder.build())
+			
 		}
+		
 	}
 	
 	
@@ -137,9 +150,6 @@ class LockScreenService : Service() {
 	private val audioReceiver = object : BroadcastReceiver() {
 		override fun onReceive(context: Context?, intent: Intent?) {
 
-
-//            val audioRecorder = AudioRecorder.getInstance()
-			
 			
 			if(isRecording) {
 				val audioFile = File("$filesDir/$audioFileName")

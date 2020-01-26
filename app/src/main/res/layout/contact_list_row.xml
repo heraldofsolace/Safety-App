@@ -30,13 +30,13 @@
             android:id="@+id/contact_list_row_number"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
             android:layout_marginEnd="5dp"
-            android:layout_marginBottom="5dp"
             android:text="TextView"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/dragIcon"
-            app:layout_constraintStart_toStartOf="@+id/contact_list_row_name" />
+            app:layout_constraintStart_toStartOf="@+id/contact_list_row_name"
+            app:layout_constraintTop_toBottomOf="@+id/contact_list_row_name" />
 
         <ImageView
             android:id="@+id/dragIcon"
@@ -44,7 +44,6 @@
             android:layout_height="wrap_content"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/ic_drag" />
 
         <ImageView

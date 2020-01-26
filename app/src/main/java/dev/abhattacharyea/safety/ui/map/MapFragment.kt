@@ -1,10 +1,8 @@
 package dev.abhattacharyea.safety.ui.map
 
 import android.Manifest
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.app.Activity.RESULT_OK
+import android.content.*
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
@@ -17,6 +15,7 @@ import android.widget.ToggleButton
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -45,11 +44,7 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
 	GoogleMap.OnMarkerClickListener, Fragment() {
 	
 	
-	override fun onStop() {
-		client.removeLocationUpdates(locationCallback)
-		super.onStop()
-	}
-	
+	val REQUEST_CHECK_SETTINGS = 300
 	lateinit var map: GoogleMap
 	lateinit var mapsController: MapsController
 	private lateinit var client: FusedLocationProviderClient
@@ -66,6 +61,23 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
 	var currentMarker: Marker? = null
 	lateinit var bottomSheet: MapBottomSheet
 	private var userId: String? = null
+	
+	override fun onStop() {
+		if(::client.isInitialized)
+			client.removeLocationUpdates(locationCallback)
+		super.onStop()
+	}
+	
+	override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+		if(requestCode == REQUEST_CHECK_SETTINGS) {
+			if(resultCode == RESULT_OK) {
+				Log.d(TAG, "Turned on location")
+				requestLocationUpdates()
+			}
+		}
+		super.onActivityResult(requestCode, resultCode, data)
+		
+	}
 	
 	private fun searchForPlace(type: String, toggleButton: ToggleButton) {
 		
@@ -171,6 +183,9 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
 	): View? {
 		val root = inflater.inflate(R.layout.fragment_dashboard, container, false)
 		val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
+		
+		
+		
 		mapFragment.getMapAsync(this)
 		requestLocationUpdates()
 		val app = context!!.packageManager.getApplicationInfo(
@@ -201,26 +216,55 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
 	private fun requestLocationUpdates() {
 		
 		
-		val request = LocationRequest()
-		
-		
-		request.interval = 1000 * 20
-		
-		
-		request.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-		client = LocationServices.getFusedLocationProviderClient(context!!)
-		
-		
-		val permission = ContextCompat.checkSelfPermission(
-			context!!,
-			Manifest.permission.ACCESS_FINE_LOCATION
-		)
-		
-		
-		if(permission == PackageManager.PERMISSION_GRANTED) {
-			
-			client.requestLocationUpdates(request, locationCallback, null)
+		val request = LocationRequest.create()?.apply {
+			interval = 1000 * 20
+			priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+			fastestInterval = 5000
 		}
+		
+		request?.let {
+			val builder = LocationSettingsRequest.Builder()
+				.addLocationRequest(request)
+			val settingsClient = LocationServices.getSettingsClient(context!!)
+			val task = settingsClient.checkLocationSettings(builder.build())
+			task.addOnSuccessListener {
+				client = LocationServices.getFusedLocationProviderClient(context!!)
+				
+				
+				val permission = ContextCompat.checkSelfPermission(
+					context!!,
+					Manifest.permission.ACCESS_FINE_LOCATION
+				)
+				
+				
+				if(permission == PackageManager.PERMISSION_GRANTED) {
+					
+					client.requestLocationUpdates(request, locationCallback, null)
+				}
+			}.addOnFailureListener { exception ->
+				if(exception is ResolvableApiException) {
+					// Location settings are not satisfied, but this can be fixed
+					// by showing the user a dialog.
+					try {
+						// Show the dialog by calling startResolutionForResult(),
+						// and check the result in onActivityResult().
+						startIntentSenderForResult(
+							exception.resolution.intentSender,
+							REQUEST_CHECK_SETTINGS,
+							null,
+							0,
+							0,
+							0,
+							null
+						)
+					} catch(sendEx: IntentSender.SendIntentException) {
+						// Ignore the error.
+					}
+				}
+			}
+		}
+		
+		
 	}
 	
 	private val locationCallback = object : LocationCallback() {
@@ -229,24 +273,27 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
 			Log.d(TAG, "Location")
 			
 			location = locationResult.lastLocation
-			if(location != null) {
-				if(firstLocation)
-					map.animateCamera(
-						CameraUpdateFactory.newLatLngZoom(
-							LatLng(
-								location!!.latitude,
-								location!!.longitude
-							), 20F
+			if(::map.isInitialized) {
+				if(location != null) {
+					if(firstLocation)
+						map.animateCamera(
+							CameraUpdateFactory.newLatLngZoom(
+								LatLng(
+									location!!.latitude,
+									location!!.longitude
+								), 20F
+							)
 						)
-					)
 //                else
 //                    map.moveCamera(CameraUpdateFactory.newLatLng(LatLng(
 //                        location!!.latitude,
 //                        location!!.longitude
 //                    )))
-				firstLocation = false
-				
+					firstLocation = false
+					
+				}
 			}
+			
 		}
 	}
 	
@@ -301,6 +348,8 @@ class MapFragment : OnMapReadyCallback, CompoundButton.OnCheckedChangeListener,
 			hospitalToggleButton.isChecked = false
 			policeToggleButton.isChecked = false
 			atmToggleButton.isChecked = false
+			busStationToggleButton.isChecked = false
+			trainStationToggleButton.isChecked = false
 			val directionsCall =
 				RetrofitClient.googleMethods().getDirections(
 					"${location?.latitude},${location?.longitude}",
